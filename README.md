@@ -1,4 +1,4 @@
-# \[Group name\]
+# \[Caroline and Julie]
 
 **Group members:**
 - Caroline Bergholdt Hansen
