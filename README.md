@@ -1,9 +1,9 @@
 # \[Group name\]
 
 **Group members:**
-- A
-- B
-- C
+- Caroline Bergholdt Hansen
+- Julie Cathrine Krabek Sørensen
+
 
 This repository contains  
 1. Inaugural project. 
