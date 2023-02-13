@@ -1,5 +1,4 @@
 # Caroline and Julie
-## yes 
 
 **Group members:**
 - Caroline Bergholdt Hansen
