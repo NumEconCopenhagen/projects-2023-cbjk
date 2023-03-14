@@ -53,7 +53,7 @@ class HouseholdSpecializationModelClass:
         # a. consumption of market goods
         C = par.wM*LM + par.wF*LF
 
-        # b. home production
+        # b. home production (denne skal ændres)
         H = HM**(1-par.alpha)*HF**par.alpha
 
         # c. total consumption utility
