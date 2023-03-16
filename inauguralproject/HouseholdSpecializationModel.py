@@ -54,11 +54,19 @@ class HouseholdSpecializationModelClass:
         C = par.wM*LM + par.wF*LF
 
         # b. home production (denne skal ændres)
-        H = HM**(1-par.alpha)*HF**par.alpha
+        if par.sigma == 1:
+            H = HM**(1-par.alpha)*HF**par.alpha
+            #return H
+        elif par.sigma == 0:
+            H = np.min(HM, HF)
+            #return H
+        else:
+            H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma)+par.alpha*HF**((par.sigma-1)/par.sigma))**(par.sigma/(par.sigma-1))
+            #return H 
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
-        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)
+        utility = (np.fmax(Q,1e-8)**(1-par.rho))/(1-par.rho)
 
         # d. disutlity of work
         epsilon_ = 1+1/par.epsilon
@@ -108,6 +116,40 @@ class HouseholdSpecializationModelClass:
 
     def solve(self,do_print=False):
         """ solve model continously """
+        par = self.par
+        sol = self.sol
+        opt = SimpleNamespace()
+        
+        # a. all possible choices
+        x = np.linspace(0,24,300)
+        LM,HM,LF,HF = np.meshgrid(x,x,x,x) # all combinations
+    
+        LM = LM.ravel() # vector
+        HM = HM.ravel()
+        LF = LF.ravel()
+        HF = HF.ravel()
+
+        # b. calculate utility
+        u = self.calc_utility(LM,HM,LF,HF)
+    
+        # c. set to minus infinity if constraint is broken
+        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
+        u[I] = -np.inf
+    
+        # d. find maximizing argument
+        j = np.argmax(u)
+        
+        opt.LM = LM[j]
+        opt.HM = HM[j]
+        opt.LF = LF[j]
+        opt.HF = HF[j]
+
+        # e. print
+        if do_print:
+            for k,v in opt.__dict__.items():
+                print(f'{k} = {v:6.4f}')
+
+        return opt
 
         pass    
 
