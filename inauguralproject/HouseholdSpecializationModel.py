@@ -161,12 +161,12 @@ class HouseholdSpecializationModelClass:
                 results = self.solve_discrete()
             else:
                 results = self.solve()
-                j = np.where(par.wF_vec ==i)
+            j = np.where(par.wF_vec ==i)[0][0]
 
-                sol.LM_vec[j] = results.LM
-                sol.HM_vec[j] = results.HM
-                sol.LF_vec[j] = results.LF
-                sol.HF_vec[j] = results.HF
+            sol.LM_vec[j] = results.LM
+            sol.HM_vec[j] = results.HM
+            sol.LF_vec[j] = results.LF
+            sol.HF_vec[j] = results.HF
 
         return sol
 
@@ -185,24 +185,42 @@ class HouseholdSpecializationModelClass:
     
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
+        par = self.par
+        sol = self.sol
+        if alpha == None:
 
-        def objective(parameter):
-            par = self.par
-            sol = self.sol
-            par.alpha = parameter[0]
-            par.sigma = parameter[1]
-            self.solve_wF_vec()
-            self.run_regression()
-            return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+            def objective(x):
+                par.alpha = x[1]
+                par.sigma = x[0]
+                self.solve_wF_vec()
+                self.run_regression()
+                return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
-    
-        obj = lambda parameter: objective(parameter)
-        guess = [0.5]*2
-        bounds = [(0,1)]*2
-        # ii. optimizer
-        result = optimize.minimize(obj,
-                            guess,
-                            method='Nelder-Mead',
-                            bounds=bounds)
-        return result.parameter[0], result.paramter[1]
-            
+        
+            obj = lambda x: objective(x)
+            guess = [0.5]*2
+            bounds = [(-0.00001,1)]*2
+            # ii. optimizer
+            result = optimize.minimize(obj,
+                                guess,
+                                method='Nelder-Mead',
+                                bounds=bounds)
+            return result
+        else:
+            def objective(x):
+                par.alpha = alpha
+                par.sigma = x[0]
+                self.solve_wF_vec()
+                self.run_regression()
+                return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+
+        
+            obj = lambda x: objective(x)
+            guess = [0.5]
+            bounds = [(-0.00001,1)]
+            # ii. optimizer
+            result = optimize.minimize(obj,
+                                guess,
+                                method='Nelder-Mead',
+                                bounds=bounds)
+            return result, alpha
