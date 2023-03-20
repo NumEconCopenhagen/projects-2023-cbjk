@@ -44,6 +44,8 @@ class HouseholdSpecializationModelClass:
         sol.beta0 = np.nan
         sol.beta1 = np.nan
 
+
+
     def calc_utility(self,LM,HM,LF,HF):
         """ calculate utility """
 
@@ -75,6 +77,8 @@ class HouseholdSpecializationModelClass:
         disutility = par.nu*(TM**epsilon_/epsilon_+TF**epsilon_/epsilon_)
         
         return utility - disutility
+
+
 
     def solve_discrete(self,do_print=False):
         """ solve model discretely """
@@ -115,6 +119,22 @@ class HouseholdSpecializationModelClass:
 
         return opt
 
+    def plot_illustration(self, plot_dataframe):
+        """ Code to make the illutrations """
+        
+        # Contruct the figure 
+        fig = plt.figure()
+        ax = fig.add_subplot(1,1,1)
+
+        # Adds the variables 
+        ax.plot(plot_dataframe['w ratio'],plot_dataframe['H ratio'])
+        
+        # Set title and labels 
+        ax.set_title('Log relationship between ratio of hours worked and ratio of wage')
+        ax.set_xlabel('$log(\omega_F/\omega_M)$')
+        ax.set_ylabel('$log(H_F/H_M)$')
+
+
     def solve(self,do_print=False):
         """ solve model continously """
   
@@ -132,7 +152,7 @@ class HouseholdSpecializationModelClass:
         # ii. optimizer
         result = optimize.minimize(obj,
                             guess,
-                            method='SLSQP',
+                            method='Nelder-Mead',
                             bounds=bounds,
                             constraints=constraints)
         
@@ -183,8 +203,10 @@ class HouseholdSpecializationModelClass:
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
+
+
     def estimate(self,alpha=None,sigma=None):
-        """ estimate alpha and sigma """
+        """ estimate alpha and sigma for variable and fixed alpha """
         par = self.par
         sol = self.sol
         if alpha == None:
