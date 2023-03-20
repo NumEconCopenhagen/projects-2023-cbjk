@@ -66,7 +66,7 @@ class HouseholdSpecializationModelClass:
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
-        utility = (np.fmax(Q,1e-8)**(1-par.rho))/(1-par.rho)
+        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)
 
         # d. disutlity of work
         epsilon_ = 1+1/par.epsilon
@@ -106,6 +106,7 @@ class HouseholdSpecializationModelClass:
         opt.HM = HM[j]
         opt.LF = LF[j]
         opt.HF = HF[j]
+        opt.u = u[j]
 
         # e. print
         if do_print:
@@ -116,47 +117,60 @@ class HouseholdSpecializationModelClass:
 
     def solve(self,do_print=False):
         """ solve model continously """
+  
         par = self.par
         sol = self.sol
         opt = SimpleNamespace()
-        
-        # a. all possible choices
-        x = np.linspace(0,24,300)
-        LM,HM,LF,HF = np.meshgrid(x,x,x,x) # all combinations
-    
-        LM = LM.ravel() # vector
-        HM = HM.ravel()
-        LF = LF.ravel()
-        HF = HF.ravel()
 
-        # b. calculate utility
-        u = self.calc_utility(LM,HM,LF,HF)
-    
-        # c. set to minus infinity if constraint is broken
-        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
-        u[I] = -np.inf
-    
-        # d. find maximizing argument
-        j = np.argmax(u)
-        
-        opt.LM = LM[j]
-        opt.HM = HM[j]
-        opt.LF = LF[j]
-        opt.HF = HF[j]
+        def objective(x):
+            return -self.calc_utility(x[0], x[1], x[2], x[3])
 
-        # e. print
+        obj = lambda x: objective(x)
+        guess = [4]*4
+        bounds = [(0,24)]*4
+        constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
+        # ii. optimizer
+        result = optimize.minimize(obj,
+                            guess,
+                            method='SLSQP',
+                            bounds=bounds,
+                            constraints=constraints)
+        
+        opt.LM = result.x[0]
+        opt.HM = result.x[1]
+        opt.LF = result.x[2]
+        opt.HF = result.x[3]
+        opt.u =self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
+
         if do_print:
             for k,v in opt.__dict__.items():
                 print(f'{k} = {v:6.4f}')
 
         return opt
-
-        pass    
+        
+      
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
+        par = self.par
+        sol = self.sol
 
-        pass
+        for i in par.wF_vec:
+            par.wF = i
+            if discrete:
+                results = self.solve_discrete()
+            else:
+                results = self.solve()
+                j = np.where(par.wF_vec ==i)
+
+                sol.LM_vec[j] = results.LM
+                sol.HM_vec[j] = results.HM
+                sol.LF_vec[j] = results.LF
+                sol.HF_vec[j] = results.HF
+
+        return sol
+
+        
 
     def run_regression(self):
         """ run regression """
@@ -172,4 +186,23 @@ class HouseholdSpecializationModelClass:
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
 
-        pass
+        def objective(parameter):
+            par = self.par
+            sol = self.sol
+            par.alpha = parameter[0]
+            par.sigma = parameter[1]
+            self.solve_wF_vec()
+            self.run_regression()
+            return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+
+    
+        obj = lambda parameter: objective(parameter)
+        guess = [0.5]*2
+        bounds = [(0,1)]*2
+        # ii. optimizer
+        result = optimize.minimize(obj,
+                            guess,
+                            method='Nelder-Mead',
+                            bounds=bounds)
+        return result.parameter[0], result.paramter[1]
+            
