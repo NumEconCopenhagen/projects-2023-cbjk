@@ -44,6 +44,9 @@ class HouseholdSpecializationModelClass:
         sol.beta0 = np.nan
         sol.beta1 = np.nan
 
+        par.constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
+       
+       
 
 
     def calc_utility(self,LM,HM,LF,HF):
@@ -135,7 +138,7 @@ class HouseholdSpecializationModelClass:
         ax.set_ylabel('$log(H_F/H_M)$')
 
 
-    def solve(self,do_print=False):
+    def solve(self, do_print=False):
         """ solve model continously """
   
         par = self.par
@@ -148,13 +151,13 @@ class HouseholdSpecializationModelClass:
         obj = lambda x: objective(x)
         guess = [4]*4
         bounds = [(0,24)]*4
-        constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
+        #constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
         # ii. optimizer
         result = optimize.minimize(obj,
                             guess,
-                            method='Nelder-Mead',
+                            method='SLSQP',
                             bounds=bounds,
-                            constraints=constraints)
+                            constraints=par.constraints)
         
         opt.LM = result.x[0]
         opt.HM = result.x[1]
@@ -189,6 +192,7 @@ class HouseholdSpecializationModelClass:
             sol.HF_vec[j] = results.HF
 
         return sol
+    
 
         
 
@@ -202,24 +206,25 @@ class HouseholdSpecializationModelClass:
         y = np.log(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
+
     
 
 
-    def estimate(self,alpha=None,sigma=None):
+    def estimate(self,alpha=None):
         """ estimate alpha and sigma for variable and fixed alpha """
         par = self.par
         sol = self.sol
         if alpha == None:
 
-            def objective(x):
-                par.alpha = x[1]
-                par.sigma = x[0]
+            def objective(y):
+                par.alpha = y[1]
+                par.sigma = y[0]
                 self.solve_wF_vec()
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
         
-            obj = lambda x: objective(x)
+            obj = lambda y: objective(y)
             guess = [0.5]*2
             bounds = [(-0.00001,1)]*2
             # ii. optimizer
@@ -229,15 +234,15 @@ class HouseholdSpecializationModelClass:
                                 bounds=bounds)
             return result
         else:
-            def objective(x):
+            def objective(y):
                 par.alpha = alpha
-                par.sigma = x[0]
+                par.sigma = y[0]
                 self.solve_wF_vec()
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
         
-            obj = lambda x: objective(x)
+            obj = lambda y: objective(y)
             guess = [0.5]
             bounds = [(-0.00001,1)]
             # ii. optimizer
@@ -245,4 +250,7 @@ class HouseholdSpecializationModelClass:
                                 guess,
                                 method='Nelder-Mead',
                                 bounds=bounds)
-            return result, alpha
+          
+            return result
+        
+
