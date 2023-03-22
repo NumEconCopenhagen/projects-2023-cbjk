@@ -43,6 +43,7 @@ class HouseholdSpecializationModelClass:
         sol.beta0 = np.nan
         sol.beta1 = np.nan
 
+        # g. constraints 
         par.constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
        
        
@@ -60,13 +61,13 @@ class HouseholdSpecializationModelClass:
         # b. home production (denne skal ændres)
         if par.sigma == 1:
             H = HM**(1-par.alpha)*HF**par.alpha
-            #return H
+            
         elif par.sigma == 0:
             H = np.min(HM, HF)
-            #return H
+           
         else:
             H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma)+par.alpha*HF**((par.sigma-1)/par.sigma))**(par.sigma/(par.sigma-1))
-            #return H 
+        
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
@@ -124,14 +125,14 @@ class HouseholdSpecializationModelClass:
     def plot_illustration(self, plot_dataframe):
         """ Code to make the illutrations """
         
-        # Contruct the figure 
+        #a. contruct the figure 
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
 
-        # Adds the variables 
+        #b. adds the variables 
         ax.plot(plot_dataframe['w ratio'],plot_dataframe['H ratio'])
         
-        # Set title and labels 
+        #c. set title and labels 
         ax.set_title('Log relationship between ratio of hours worked and ratio of wage')
         ax.set_xlabel('$log(\omega_F/\omega_M)$')
         ax.set_ylabel('$log(H_F/H_M)$')
@@ -144,26 +145,29 @@ class HouseholdSpecializationModelClass:
         sol = self.sol
         opt = SimpleNamespace()
 
+        # a. objective function (to minimize) 
         def objective(x):
             return -self.calc_utility(x[0], x[1], x[2], x[3])
-
+        
         obj = lambda x: objective(x)
         guess = [4]*4
         bounds = [(0,24)]*4
-        #constraints = ({'type': 'ineq', 'fun': lambda x: 24 - (x[0]+x[1])},{'type': 'ineq', 'fun': lambda x: 24 - (x[2]+x[3])})
-        # ii. optimizer
+
+        # b. optimizer
         result = optimize.minimize(obj,
                             guess,
                             method='SLSQP',
                             bounds=bounds,
                             constraints=par.constraints)
         
+        #c. store results
         opt.LM = result.x[0]
         opt.HM = result.x[1]
         opt.LF = result.x[2]
         opt.HF = result.x[3]
         opt.u =self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
 
+        #d. print
         if do_print:
             for k,v in opt.__dict__.items():
                 print(f'{k} = {v:6.4f}')
@@ -180,14 +184,17 @@ class HouseholdSpecializationModelClass:
         par = self.par
         sol = self.sol
 
+        #a. loop over relative wage and solve model
         for i in par.wF_vec:
             par.wF = i
-            if discrete:
+            if discrete: # for discrete choice model
                 results = self.solve_discrete()
-            else:
+            else: #for continous choice model
                 results = self.solve()
+            # i. find index of argument  
             j = np.where(par.wF_vec ==i)[0][0]
 
+            # ii. store results
             sol.LM_vec[j] = results.LM
             sol.HM_vec[j] = results.HM
             sol.LF_vec[j] = results.LF
@@ -214,11 +221,12 @@ class HouseholdSpecializationModelClass:
         """ estimate alpha and sigma for variable and fixed alpha """
         par = self.par
         sol = self.sol
+        # a. alpha
         if alpha == None:
-
+            # i. objective function (to minimize) 
             def objective(y):
-                par.alpha = y[1]
-                par.sigma = y[0]
+                par.alpha = y[1] #variable
+                par.sigma = y[0] #variable
                 self.solve_wF_vec()
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
@@ -231,11 +239,14 @@ class HouseholdSpecializationModelClass:
                                 guess,
                                 method='Nelder-Mead',
                                 bounds=bounds)
-            return result
+            # iii. print
+            print(f'alpha = {result.x[1]}')
+            print(f'sigma = {result.x[0]}')
         else:
+            # i. objective function (to minimize)
             def objective(y):
-                par.alpha = alpha
-                par.sigma = y[0]
+                par.alpha = alpha #chosen alpha
+                par.sigma = y[0] #variables
                 self.solve_wF_vec()
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
