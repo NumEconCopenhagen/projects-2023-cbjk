@@ -173,7 +173,10 @@ class HouseholdSpecializationModelClass:
       
 
     def solve_wF_vec(self,discrete=False):
-        """ solve model for vector of female wages """
+        """ 
+        solve model for vector of female wages 
+        """
+
         par = self.par
         sol = self.sol
 
@@ -193,10 +196,10 @@ class HouseholdSpecializationModelClass:
         return sol
     
 
-        
-
     def run_regression(self):
-        """ run regression """
+        """ 
+        run regression 
+        """
 
         par = self.par
         sol = self.sol
@@ -207,8 +210,6 @@ class HouseholdSpecializationModelClass:
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
 
     
-
-
     def estimate(self,alpha=None):
         """ estimate alpha and sigma for variable and fixed alpha """
         par = self.par
@@ -222,7 +223,6 @@ class HouseholdSpecializationModelClass:
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
-        
             obj = lambda y: objective(y)
             guess = [0.5]*2
             bounds = [(-0.00001,1)]*2
@@ -240,7 +240,6 @@ class HouseholdSpecializationModelClass:
                 self.run_regression()
                 return (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
-        
             obj = lambda y: objective(y)
             guess = [0.5]
             bounds = [(-0.00001,1)]
