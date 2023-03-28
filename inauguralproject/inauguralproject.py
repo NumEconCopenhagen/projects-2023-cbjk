@@ -150,7 +150,7 @@ class HouseholdSpecializationModelClass:
             return -self.calc_utility(x[0], x[1], x[2], x[3])
         
         obj = lambda x: objective(x)
-        guess = [4]*4
+        guess = [3,5.5,5,4]
         bounds = [(0,24)]*4
 
         # b. optimizer
