@@ -6,5 +6,5 @@
 
 This repository contains  
 1. Inaugural project. 
-2. Data project. We fetch data from **source x** on **y** and show that ...
-3. Model project. We model ...
+2. Data project. We fetch data from Danish Statistics and show father's and mother's days of parential leave conditional on education level. Further, father's share conditional on education level for mother and father. 
+3. Model project. We model 
