@@ -6,18 +6,16 @@ import matplotlib.pyplot as plt
 
 class OLGModelClass():
 
-    def __init__(self,do_print=False):
+    def __init__(self):
         """ create the model """
-
-        if do_print: print('initializing the model:')
-
+        # a. set SimpleNamespace
         self.par = SimpleNamespace()
         self.sim = SimpleNamespace()
 
-        if do_print: print('calling .setup()')
+        # b. set setup the class 
         self.setup()
 
-        if do_print: print('calling .allocate()')
+        # c. set allecate of varnames
         self.allocate()
     
     def setup(self):
@@ -26,27 +24,31 @@ class OLGModelClass():
         par = self.par
 
         # a. household
-        par.sigma = 2.0 # CRRA coefficient
-        par.beta = 1/1.40 # discount factor
+        par.sigma = 1.0    # CRRA coefficient
+        par.beta = 1/1.40  # discount factor
 
         # b. firms
         par.production_function = 'ces'
-        par.alpha = 0.30 # capital weight
-        par.theta = 0.05 # substitution parameter
-        par.delta = 0.50 # depreciation rate
+        par.alpha = 0.30  # capital weight
+        par.theta = 0.0   # substitution parameter
+        par.delta = 0.50  # depreciation rate
 
         # c. government
-        par.tau_w = 0.10 # labor income tax
-        par.tau_r = 0.20 # capital income tax
+        par.tau_w = 0.0  # labor income tax
+        par.tau_r = 0.0  # capital income tax
 
         # d. misc
-        par.K_lag_ini = 0.001 # initial capital stock
-        par.B_lag_ini = 0.0 # initial government debt
-        par.simT = 50 # length of simulation
+        par.K_lag_ini = 1.0   # initial capital stock
+        par.B_lag_ini = 0.0   # initial government debt
+        par.simT = 50         # length of simulation
 
-        # e. population and technological growth 
-        par.n = 0 
-        par.At = 0
+        # e. population and technology  
+        par.n = 1.0
+        par.At = 1.0
+
+        # f. PAYG
+        par.d = 0.0
+
 
     def allocate(self):
         """ allocate arrays for simulation """
@@ -81,7 +83,7 @@ class OLGModelClass():
         for t in range(par.simT):
             
             # i. simulate before s
-            simulate_before_s(par,sim,t, pop = True, At = True)
+            simulate_before_s(par,sim,t)
 
             if t == par.simT-1: continue          
 
@@ -94,7 +96,7 @@ class OLGModelClass():
             s = result.root
 
             # iii. simulate after s
-            simulate_after_s(par,sim,t,s,pop = True, At = True)
+            simulate_after_s(par,sim,t,s)
 
         if do_print: print(f'simulation done in {time.time()-t0:.2f} secs')
 
@@ -158,7 +160,7 @@ def calc_euler_error(s,par,sim,t):
 
     return LHS-RHS
 
-def simulate_before_s(par,sim,t, pop = True, At = True):
+def simulate_before_s(par,sim,t):
     """ simulate forward """
 
     if t > 0:
@@ -166,126 +168,107 @@ def simulate_before_s(par,sim,t, pop = True, At = True):
         sim.B_lag[t] = sim.B[t-1]
 
     # a. production and factor prices
-    if pop == False and par.production_function == 'ces':
+    if par.production_function == 'ces':
         # i. production
-        sim.Y[t] = (par.alpha*sim.K_lag[t]**(-par.theta) + (1-par.alpha)*(1.0)**(-par.theta) )**(-1.0/par.theta)
+        sim.Y[t] = (par.alpha*sim.K_lag[t]**(-par.theta) + (1-par.alpha)*(par.n*par.A)**(-par.theta) )**(-1.0/par.theta)
 
         # ii. factor prices
         sim.rk[t] = par.alpha*sim.K_lag[t]**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-        sim.w[t] = (1-par.alpha)*(1.0)**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
+        sim.w[t] = (1-par.alpha)*(par.n*par.A)**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
 
-    elif pop == False and par.production_function == 'cobb-douglas':
+    elif par.production_function == 'cobb-douglas':
         # i. production
-        sim.Y[t] = sim.K_lag[t]**par.alpha * (1.0)**(1-par.alpha)
+        sim.Y[t] = sim.K_lag[t]**par.alpha * par.n*par.At**(1-par.alpha)
 
         # ii. factor prices
-        sim.rk[t] = par.alpha * sim.K_lag[t]**(par.alpha-1) * (1.0)**(1-par.alpha)
-        sim.w[t] = (1-par.alpha) * sim.K_lag[t]**(par.alpha) * (1.0)**(-par.alpha)
-
-    # b. add population growth
-    elif pop == True and par.production_function == 'ces': 
-        # i. production
-        sim.Y[t] = ( par.alpha*sim.K_lag[t]**(-par.theta) + (1-par.alpha)*(1.0 + par.n)**(-par.theta) )**(-1.0/par.theta)
-
-        # ii. factor prices
-        sim.rk[t] = par.alpha*sim.K_lag[t]**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-        sim.w[t] = (1-par.alpha)*(1.0 + par.n)**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-
-    elif pop == True and par.production_function == 'cobb-douglas':
-        # i. production
-        sim.Y[t] = sim.K_lag[t]**par.alpha * (1.0 + par.n)**(1-par.alpha)
-
-        # ii. factor prices
-        sim.rk[t] = par.alpha * sim.K_lag[t]**(par.alpha-1) * (1.0 + par.n)**(1-par.alpha)
-        sim.w[t] = (1-par.alpha) * sim.K_lag[t]**(par.alpha) * (1.0 + par.n)**(-par.alpha)
-
-    elif pop == True and At == True and par.production_function == 'ces': 
-        # i. production
-        sim.Y[t] = ( par.alpha*sim.K_lag[t]**(-par.theta) + (1-par.alpha)*((1.0 + par.n)*par.A)**(-par.theta) )**(-1.0/par.theta)
-
-        # ii. factor prices
-        sim.rk[t] = par.alpha*sim.K_lag[t]**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-        sim.w[t] = (1-par.alpha)*((1.0 + par.n)*par.A)**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-
-    elif pop == False and At == True and par.production_function == 'ces': 
-        # i. production
-        sim.Y[t] = (par.alpha*sim.K_lag[t]**(-par.theta) + (1-par.alpha)*((1.0)*par.A)**(-par.theta))**(-1.0/par.theta)
-
-        # ii. factor prices
-        sim.rk[t] = par.alpha*sim.K_lag[t]**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
-        sim.w[t] = (1-par.alpha)*((1.0)*par.A)**(-par.theta-1) * sim.Y[t]**(1.0+par.theta)
+        sim.rk[t] = par.alpha*sim.K_lag[t]**(par.alpha-1) * (par.n*par.At)**(1-par.alpha)
+        sim.w[t] = (1-par.alpha)*sim.K_lag[t]**(par.alpha) * (par.n*par.At)**(-par.alpha)
 
     else:
         raise NotImplementedError('unknown type of production function')
     
 
-    # c. no-arbitrage and after-tax return
-    sim.r[t] = sim.rk[t]-par.delta # after-depreciation return
-    sim.rb[t] = sim.r[t] # same return on bonds
-    sim.rt[t] = (1-par.tau_r)*sim.r[t] # after-tax return
+    # b. no-arbitrage and after-tax return
+    sim.r[t] = sim.rk[t]-par.delta      # after-depreciation return
+    sim.rb[t] = sim.r[t]                # same return on bonds
+    sim.rt[t] = (1-par.tau_r)*sim.r[t]  # after-tax return
 
-    # d. consumption
-    sim.C2[t] = (1+sim.rt[t])*(sim.K_lag[t]+sim.B_lag[t])
+    # c. consumption
+    sim.C2[t] = (1+sim.rt[t])*(sim.K_lag[t]+sim.B_lag[t]) + par.d
 
     # d. government
-    if pop == False:
-        sim.T[t] = par.tau_r*sim.r[t]*(sim.K_lag[t]+sim.B_lag[t]) + par.tau_w*sim.w[t]*(1.0)
-
-    elif pop == True:
-        sim.T[t] = par.tau_r*sim.r[t]*(sim.K_lag[t]+sim.B_lag[t]) + par.tau_w*sim.w[t]*(1.0 + par.n)
-
-    elif pop == True and At == True:
-        sim.T[t] = par.tau_r*sim.r[t]*(sim.K_lag[t]+sim.B_lag[t]) + par.tau_w*sim.w[t]*((1.0 + par.n)*par.A)
-
-    elif pop == False and At == True:
-        sim.T[t] = par.tau_r*sim.r[t]*(sim.K_lag[t]+sim.B_lag[t]) + par.tau_w*sim.w[t]*((1.0)*par.A)
+    sim.T[t] = par.tau_r*sim.r[t]*(sim.K_lag[t]+sim.B_lag[t]) + par.tau_w*sim.w[t]*par.n*par.At + par.d
 
     if sim.balanced_budget[t]:
         sim.G[t] = sim.T[t] - sim.r[t]*sim.B_lag[t]
 
     sim.B[t] = (1+sim.r[t])*sim.B_lag[t] - sim.T[t] + sim.G[t]
 
-def simulate_after_s(par,sim,t,s, pop = True, At = True):
+def simulate_after_s(par,sim,t,s):
     """ simulate forward """
 
     # a. consumption of young
-    if pop == False:
-        #. i. 
-        sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*(1.0)
-
-    elif pop == True:
-        #. ii. 
-        sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*(1.0 + par.n)
-
-    elif pop == True and At == True:
-        #. ii. 
-        sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*((1.0 + par.n)*par.A)
-
-    elif pop == False and At == True:
-        #. ii. 
-        sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*((1.0)*par.A)
+    sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*par.n*par.At - par.d
 
     # b. end-of-period stocks
     I = sim.Y[t] - sim.C1[t] - sim.C2[t] - sim.G[t]
     sim.K[t] = (1-par.delta)*sim.K_lag[t] + I
      
     
-def plot_K(K_lag, K_ss = None, K_lag_old = None):
-    # a. setup for function 
+def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None):
+    # a. setup for figure
     fig = plt.figure(figsize=(6,6/1.5))
     ax = fig.add_subplot(1,1,1)
 
     # b. plot K_lag and k_ss
-    ax.plot(K_lag, label=r'$K_{t-1}$', )
-    if K_lag_old is not None:
-        ax.plot(K_lag_old, label=r'$K_{t-1}$ (last simulation)')
+    ax.plot(K_lag, label=r'$K_{t-1}$', color = 'red')
     if K_ss is not None:
         ax.axhline(K_ss, ls='--', color='black', label='analytical steady state')
-
+    if K_lag_old is not None:
+        ax.plot(K_lag_old, label=r'$K_{t-1}$ (last simulation)', color = 'blue')
+    if K_lag_int is not None:
+        ax.plot(K_lag_int, label=r'$K_{t-1}$ (initial simulation)', color = 'darkblue')
+   
     # c. add legend 
     ax.legend(frameon=True)
 
     # d. make it look pretty and show the beauty 
     fig.tight_layout()
     plt.show()
+
+def plot_C(C1, C1_payg, C2, C2_payg, title = None):
+    # a. setup for figure
+    fig = plt.figure(figsize=(2*6,6/1.5))
+    
+    # b. plot C_1 
+    ax = fig.add_subplot(1,2,1)
+    ax.plot(C1, label=r'$C_{1t}$ (initial)')
+    ax.plot(C1_payg, label=r'$C_{1t}$')
+    
+    # c. add legend
+    ax.legend(frameon=True)
+
+    # f. set the title
+    if title is not None:
+        ax.set_title(title, loc = 'left')
+
+    # d. plot C_2
+    ax = fig.add_subplot(1,2,2)
+    ax.plot(C2, label=r'$C_{2t+1}$ (initial)')
+    ax.plot(C2_payg, label=r'$C_{2t+1}$')
+
+    # e. add legends 
+    ax.legend(frameon=True)
+
+    # g. make it look pretty and show the beauty 
+    fig.tight_layout()
+    plt.show()
+
+
+
+
+
+
+
+
 
