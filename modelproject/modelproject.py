@@ -213,11 +213,10 @@ def simulate_after_s(par,sim,t,s):
     # b. end-of-period stocks
     I = sim.Y[t] - sim.C1[t] - sim.C2[t] - sim.G[t]
     sim.K[t] = (1-par.delta)*sim.K_lag[t] + I
-     
-    
-def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None):
+
+def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = None):
     # a. setup for figure
-    fig = plt.figure(figsize=(6,6/1.5))
+    fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
 
     # b. plot K_lag and k_ss
@@ -226,19 +225,22 @@ def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None):
         ax.axhline(K_ss, ls='--', color='black', label='analytical steady state')
     if K_lag_old is not None:
         ax.plot(K_lag_old, label=r'$K_{t-1}$ (last simulation)', color = 'blue')
+    if K_lag_tau is not None:
+        ax.plot(K_lag_tau, label=r'$K_{t-1}$ (labor income tax)', color = 'darkblue')
     if K_lag_int is not None:
-        ax.plot(K_lag_int, label=r'$K_{t-1}$ (initial simulation)', color = 'darkblue')
-   
+        ax.plot(K_lag_int, label=r'$K_{t-1}$ (initial simulation)', color = 'black')
+    
     # c. add legend 
-    ax.legend(frameon=True)
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), fontsize=10, ncol = 2)
 
     # d. make it look pretty and show the beauty 
     fig.tight_layout()
     plt.show()
 
+
 def plot_C(C1, C1_payg, C2, C2_payg, title = None):
     # a. setup for figure
-    fig = plt.figure(figsize=(2*6,6/1.5))
+    fig = plt.figure(figsize = (2*6,8/1.5))
     
     # b. plot C_1 
     ax = fig.add_subplot(1,2,1)
@@ -246,7 +248,7 @@ def plot_C(C1, C1_payg, C2, C2_payg, title = None):
     ax.plot(C1_payg, label=r'$C_{1t}$')
     
     # c. add legend
-    ax.legend(frameon=True)
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), fontsize=10, ncol = 2)
 
     # f. set the title
     if title is not None:
@@ -258,7 +260,7 @@ def plot_C(C1, C1_payg, C2, C2_payg, title = None):
     ax.plot(C2_payg, label=r'$C_{2t+1}$')
 
     # e. add legends 
-    ax.legend(frameon=True)
+    ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.3), fontsize=10, ncol = 2)
 
     # g. make it look pretty and show the beauty 
     fig.tight_layout()
