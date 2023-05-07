@@ -124,33 +124,49 @@ def calculate_father_share(barsel_true, year):
                                & (barsel_true['TAL'] != 'Number of couples')
                                & (barsel_true['TAL'] != 'Mother - days on parental leave (benefits) before birth on average')
                                & (barsel_true['TID'] == year)]
+    
     # b. Cut data 
     Father_part_educ_1 = Father_part_educ_1[['TAL', 'MORUD', 'FARUD', 'INDHOLD']]
+    
     # c. Rename the TAL column
     Father_part_educ_1['TAL'] = Father_part_educ_1['TAL'].str.split(' ').str[0]
+    
     # d. Rename MORUD and FARUD
     Father_part_educ_1['MORUD'] = Father_part_educ_1['MORUD'].str.replace('Mother ', '').str.title()
     Father_part_educ_1['MORUD'] = Father_part_educ_1['MORUD'].str.replace('Tertirary', 'Tertiary').str.title()
     Father_part_educ_1['FARUD'] = Father_part_educ_1['FARUD'].str.replace('Father ', '').str.title()
+    
     # e. Split dataframe into one for mother and father 
     Father_part_educ_1_m = Father_part_educ_1[Father_part_educ_1['TAL'] == 'Mother']
     Father_part_educ_1_f = Father_part_educ_1[Father_part_educ_1['TAL'] == 'Father']
+    
     # f. Merge the two dataframes 
     Father_part_educ_1 = pd.merge(Father_part_educ_1_m, Father_part_educ_1_f, on = ['MORUD', 'FARUD'], how = 'left')
+    
     # g. Cut data 
     Father_part_educ_1 = Father_part_educ_1[['MORUD', 'FARUD', 'INDHOLD_x', 'INDHOLD_y']]
+    
     # h. Rename the columns 
     Father_part_educ_1.columns = ['MORUD', 'FARUD', 'mother', 'father']
+    
     # i. Find fathers share of parential leave 
     Father_part_educ_1['FS'] = Father_part_educ_1['father']/(Father_part_educ_1['father'] + Father_part_educ_1['mother'])*100
     Father_part_educ_1['FS'] = Father_part_educ_1['FS'].round(1)
+    
     # j. Make pivot for fathers share in % 
-    Father_part_educ_2020_pivot_procent = Father_part_educ_1.pivot_table(index='MORUD', columns='FARUD', values='FS')
+    Father_part_educ_2020_pivot_procent = Father_part_educ_1.pivot_table(index='MORUD', columns='FARUD', values='FS').round(1)
     Father_part_educ_2020_pivot_procent = Father_part_educ_2020_pivot_procent.reindex(['Lower Secondary', 'Upper Secondary', 'Short Cycle Tertiary', 'Bachelor', 'Master'], axis=1)
     Father_part_educ_2020_pivot_procent = Father_part_educ_2020_pivot_procent.reindex(['Lower Secondary', 'Upper Secondary', 'Short Cycle Tertiary', 'Bachelor', 'Master'])
+    
     # k. Make pivot for fathers share in days 
-    Father_part_educ_2020_pivot_days = Father_part_educ_1.pivot_table(index='MORUD', columns='FARUD', values='father')
+    Father_part_educ_2020_pivot_days = Father_part_educ_1.pivot_table(index='MORUD', columns='FARUD', values='father').round(1)
     Father_part_educ_2020_pivot_days = Father_part_educ_2020_pivot_days.reindex(['Lower Secondary', 'Upper Secondary', 'Short Cycle Tertiary', 'Bachelor', 'Master'], axis=1)
     Father_part_educ_2020_pivot_days = Father_part_educ_2020_pivot_days.reindex(['Lower Secondary', 'Upper Secondary', 'Short Cycle Tertiary', 'Bachelor', 'Master'])
+    
+    # l. color the pivots 
+    Father_part_educ_2020_pivot_procent_color = Father_part_educ_2020_pivot_procent.style.background_gradient(
+        cmap = 'YlGn', axis = None)
+    Father_part_educ_2020_pivot_days_color = Father_part_educ_2020_pivot_days.style.background_gradient(
+        cmap = 'YlGn', axis = None)
 
-    return  Father_part_educ_2020_pivot_procent, Father_part_educ_2020_pivot_days
+    return  Father_part_educ_2020_pivot_procent_color, Father_part_educ_2020_pivot_days_color
