@@ -243,13 +243,6 @@ def sim_a(par,sim,t,s):
     # ii. capital 
     sim.K[t] = (1-par.delta)*sim.K_lag[t] + I
 
-    # # d. find utility
-    # if par.sigma == 1.0:
-    #     sim.u = np.log(sim.C1[t]) + par.beta*np.log(sim.C2_1[t])
-    # if par.sigma > 1.0 or par.sigma < 1.0:
-    #     sim.u = (sim.C1[t]**(1-par.sigma))/(1-par.sigma) + par.beta*(sim.C2_1[t]**(1-par.sigma))/(1-par.sigma)
-
-
 def plot_K(K_lag = None, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = None):
     """ Plot the capital """
 
