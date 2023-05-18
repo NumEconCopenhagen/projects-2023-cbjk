@@ -223,10 +223,19 @@ def sim_a(par,sim,t,s):
     """
 
     # a. consumption of young
-    sim.C1[t] = (1-par.tau_w)*sim.w[t]*(1.0-s)*par.n*par.At - par.d
+    if t == 0:
+        sim.C1[t] = (1 - par.tau_w) * sim.w[t] * (1.0 - s) * par.n * par.At - par.d
+    else:
+        sim.C1[t] = (1 - par.tau_w) * sim.w[t] * (1.0 - s) * par.n * par.At
+
     
     # b. consumption of old to t+1 
-    sim.C2_1[t+1] = (1+sim.rt[t+1])*(sim.K_lag[t+1]+sim.B_lag[t+1]) + par.d
+    if t == 0:
+        sim.C2[t+1] = (1 + sim.rt[t+1]) * (sim.K_lag[t+1] + sim.B_lag[t+1]) + par.d
+    else:
+        sim.C2[t+1] = (1 + sim.rt[t+1]) * (sim.K_lag[t+1] + sim.B_lag[t+1])
+
+    #sim.C2[t+1] = (1+sim.rt[t+1])*(sim.K_lag[t+1]+sim.B_lag[t+1]) + par.d*(1+par.n)
 
     # c. end-of-period stocks
     # i. investments 
@@ -234,22 +243,23 @@ def sim_a(par,sim,t,s):
     # ii. capital 
     sim.K[t] = (1-par.delta)*sim.K_lag[t] + I
 
-    # d. find utility
-    if par.sigma == 1.0:
-        sim.u = np.log(sim.C1[t]) + par.beta*np.log(sim.C2_1[t])
-    if par.sigma > 1.0 or par.sigma < 1.0:
-        sim.u = (sim.C1[t]**(1-par.sigma))/(1-par.sigma) + par.beta*(sim.C2_1[t]**(1-par.sigma))/(1-par.sigma)
+    # # d. find utility
+    # if par.sigma == 1.0:
+    #     sim.u = np.log(sim.C1[t]) + par.beta*np.log(sim.C2_1[t])
+    # if par.sigma > 1.0 or par.sigma < 1.0:
+    #     sim.u = (sim.C1[t]**(1-par.sigma))/(1-par.sigma) + par.beta*(sim.C2_1[t]**(1-par.sigma))/(1-par.sigma)
 
 
-def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = None):
+def plot_K(K_lag = None, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = None):
     """ Plot the capital """
 
     # a. setup for figure
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
 
-    # b. plot 
-    ax.plot(K_lag, label=r'$K_{t-1}$', color = 'red')
+    # b. plot
+    if K_lag is not None: 
+        ax.plot(K_lag, label=r'$K_{t-1}$', color = 'red')
     # i. analytical steady state 
     if K_ss is not None:
         ax.axhline(K_ss, ls='--', color='black', label='analytical steady state')
@@ -274,7 +284,6 @@ def plot_K(K_lag, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = N
     # e. make it look pretty and show the beauty 
     fig.tight_layout()
     plt.show()
-
 
 def plot_C(C1, C1_2, C2 = None, C2_2 = None, C2_1 = None,  C2_1_2 = None, title = None):
     """ Plot the consumption """
