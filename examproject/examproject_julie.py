@@ -126,6 +126,8 @@ class question_1():
         return V_util - V_disutil
 
 
+
+
     def tau_solve(self):
         """ solve for optimal tau """
 
@@ -148,7 +150,7 @@ class question_1():
 
 # Question 5 and 6
 
-    def V_equation_gen(self, t, G):
+    def V_equation_gen(self, L, t, G):
 
         # a. set par 
         par = self.par
@@ -156,15 +158,19 @@ class question_1():
         # b. set tau to input t?? 
         par.tau = t
 
-        # c. find L*
-        L = self.L_opt()
+        # # c. find L*
+        # L = self.L_opt()
 
         # d. find C (contraint)
         C = par.kappa + (1 - par.tau) * par.omega * L
 
         # e. find V utility and disutility
-        V_util = (((par.alpha * np.power(C, (par.sigma - 1) / par.sigma)) + (1 + par.alpha) * np.power(G, par.sigma / (par.sigma - 1)))) ** (1 - par.rho) - 1) / (1 - par.rho)
+        # V_util = ((((par.alpha * np.power(C, (par.sigma - 1) / par.sigma) + (1 + par.alpha) * np.power(G, par.sigma / (par.sigma - 1)))) ** (1 - par.rho)) - 1) / (1 - par.rho)
+        # V_disutil = par.nu * (L ** (1 + par.epsilon)) / (1 + par.epsilon)
+
+        V_util = ((((par.alpha * (C**((par.sigma - 1) / par.sigma))) + (1 + par.alpha) * (G**((par.sigma - 1) / par.sigma)))**(par.sigma / (par.sigma - 1)))**(1 - par.rho) - 1) / (1 - par.rho)
         V_disutil = par.nu * (L ** (1 + par.epsilon)) / (1 + par.epsilon)
+
 
         # f. return V
         return V_util - V_disutil
