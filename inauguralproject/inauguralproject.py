@@ -106,7 +106,7 @@ class HouseholdSpecializationModelClass:
         u = self.calc_utility(LM,HM,LF,HF)
     
         # f. set to minus infinity if constraint is broken
-        I = (LM+HM > 24) | (LF+HF > 24) # | is "or"
+        I = (LM+HM > 24) | (LF+HF > 24)
         u[I] = -np.inf
     
         # g. find maximizing argument
