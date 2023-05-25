@@ -32,7 +32,7 @@ class labor:
         
          # note: "kwargs" is a dictionary with keyword arguments
     
-    def H(self, out=1, Delta=0.05):
+    def H(self, out=1, Delta=0.05, print_out = 0):
         """
         Calculate the value of H based on given settings.
         out=1 is the original policy
@@ -96,7 +96,10 @@ class labor:
 
         # iiii. find H by taken mean of each iteration           
         H = (H0/self.K) #
-        return H
+        if print_out == 1:
+            return print(f'For policy {out}: H = {H.round(4)}')
+        else:
+            return H
 
 
     def l_star(self, kappa):
