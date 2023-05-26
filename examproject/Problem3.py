@@ -100,7 +100,7 @@ class GoMs:
         
         # i. print last iteration 
         print(f'k = {k:4d}: x_k0 = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
-        print(f' -> converged to ({xs[-1][0]:7.2f},{xs[-1][1]:7.2f}) with f = {f:12.8f}')
+        print(f' -> converged to ({x_star[0]:7.2f},{x_star[1]:7.2f}) with f = {f:12.8f}')
 
         # j. print best solution
         print(f'\nk = {k} found the best solution.')
