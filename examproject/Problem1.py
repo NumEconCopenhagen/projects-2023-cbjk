@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from scipy import optimize
 
 class OptTax():
-
+    """ Class for solving the optimal tax problem """
+    
     def __init__(self):
         """ set initial  """
 
@@ -38,6 +39,7 @@ class OptTax():
         par.rho = 1.001
         par.epsilon = 1.0
 
+
     def L_opt(self):
         """ find L* """
         
@@ -48,17 +50,16 @@ class OptTax():
         L =(-par.kappa + np.sqrt((par.kappa**2) + 4*par.alpha/par.nu*(par.omega_tilde**2)))/(2*par.omega_tilde)
         return L
 
+
     def V_equation(self, tau, L=None, G=None, out=1):
         """ solve for V given L and G """
 
         # a. set par and sim 
         par = self.par
 
-
         # b. set default values of parameters 
         if L == None:
             L = self.L_opt()
-
         if G == None:
             G = tau * par.omega * L
 
@@ -66,13 +67,14 @@ class OptTax():
         C = par.kappa + (1 - tau)*par.omega*L
 
         # d. if statement for the 2 different utility functions
+        # i. utility function for question 1 to 4
         if out==1:
-            # i. set V LHS and RHS
+            # o. set V LHS and RHS
             V_util = np.log((C**(par.alpha)) * (G**(1-par.alpha))) 
             V_disutil = par.nu*(L**2)/2
-        
+        # ii. utility function for question 5 and 6 
         if out==2:   
-            # i. set V LHS and RHS
+            # o. set V LHS and RHS
             V_util = ((((par.alpha * (C**((par.sigma - 1) / par.sigma))) + (1 - par.alpha) * (G**((par.sigma - 1) / par.sigma)))**(par.sigma / (par.sigma - 1)))**(1 - par.rho) - 1) / (1 - par.rho)
             V_disutil = par.nu * (L ** (1 + par.epsilon)) / (1 + par.epsilon)
 
@@ -120,67 +122,81 @@ class OptTax():
         # a. guess for tau
         tau_guess = 0.5
 
-
         # b. define objective function (to maximize)
         def objective(x):
             # i. if statement if default 
             if G == None and L == None:
                 return -self.V_equation(tau = x, out=1)
-            
+            # ii. if statement if L ang G are given
             return -self.V_equation(tau = x, L = L, G = G, out = 1)
-        
 
         # c. objective function
         obj = lambda x: objective(x)
 
-        # d. optimize tau
+        # d. optimize tau and save optimal tau
         result = optimize.minimize(obj, tau_guess, method='Nelder-Mead', bounds=[(0, 1)])
         optimal_tau = result.x[0] 
 
         # e. return optimal tau 
         return optimal_tau
 
+
     def tau_loop(self):
-        V = 0
+        """ Loop through tau and find optimal """
+
+        # a. set par
         par = self.par
+
+        # b. initial guess on utility
+        V = 0
+       
+        # c. loop through values of tau
         for t in np.linspace(0.1,0.9,81):
+            # i. find optimal V, tau, L and G 
             V_guess, _, L_guess, G = self.G_loop(t) 
             if V < V_guess:
                 V = V_guess
                 tau_opt = t
                 L = L_guess
                 Gov = G
-        # iii. optimize L 
-
+       
+        # d. print optimal output
         print(f'trial value of G = {round(Gov,2)}')
         print(f'G = {round(tau_opt*par.omega*L,2)}')
         print(f' L = {round(L,2)}')
         print(f' V = {round(V,2)}')
         print(f' tau = {round(tau_opt,2)}')
 
+
     def G_loop(self, t, out = 0):
+        """ Loop through G and find optimal """
+
+        # a. set par
         par = self.par
+
+        # b. initial guess on G and L
         G = 0.1
         L = 0
+
+        # c. loop through values of G
         while abs(G -(t*par.omega*L).round(5)) > 0.009:
-        
-            # ii. objective function (to minimize) 
+            # i. objective function (to maximize) 
             def objective(x):
                 return -(self.V_equation(t, x, G=G, out=2))
-            # o. objective function 
+            # ii. objective function 
             obj = lambda x: objective(x)
+            # iii. optimize L
             result = optimize.minimize(obj, 12,  method = 'Nelder-Mead',bounds=[(0, 24)])
+            # iv. update G, L and V and find optimal G (Gov)
             G = G + 0.01
             L = result.x[0]
             V = -result.fun
             Gov = G - 0.01
-            # print(f' G = {G}')
-            # print(f'G = {(t*par.omega*result.x[0]).round(5)}')
-            # print(f' t = {t}')
-            # print(f' V = {-result.fun.round(2)}')
 
+        # d. return optimal output
         if out == 0:
             return V, t, L, Gov
+        # e. print optimal output
         else:
             print(f'trial value of G = {round(Gov,2)}')
             print(f'G = {round(t*par.omega*L,2)}')
