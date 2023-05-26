@@ -16,7 +16,6 @@ def numb_parent(barsel_true):
     return number
 
 
-
 def extract_data(barsel_true):
     
     """
