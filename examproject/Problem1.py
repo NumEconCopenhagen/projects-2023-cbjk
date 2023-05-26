@@ -114,7 +114,7 @@ class OptTax():
                 print(f'For G  = {g}, L  = {result.x[0].round(4)}')
             
 
-    def tau_solve(self,L = None, G = None, out_V = 1):
+    def tau_solve(self,L = None, G = None):
         """ solve for optimal tau """
 
         # a. guess for tau
@@ -125,9 +125,9 @@ class OptTax():
         def objective(x):
             # i. if statement if default 
             if G == None and L == None:
-                return -self.V_equation(tau = x, out=out_V)
+                return -self.V_equation(tau = x, out=1)
             
-            return -self.V_equation(tau = x, L = L, G = G, out = out_V)
+            return -self.V_equation(tau = x, L = L, G = G, out = 1)
         
 
         # c. objective function
@@ -135,7 +135,7 @@ class OptTax():
 
         # d. optimize tau
         result = optimize.minimize(obj, tau_guess, method='Nelder-Mead', bounds=[(0, 1)])
-        optimal_tau = result.x[0] #.round(4)
+        optimal_tau = result.x[0] 
 
         # e. return optimal tau 
         return optimal_tau
