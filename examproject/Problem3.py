@@ -81,32 +81,33 @@ class GoMs:
             # vi. print iterations 
             if k > 10 and k < 100:
                 if k % 20 == 0:
-                    print(f'{k:4d}: x = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
-                    print(f' -> converged at ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
+                    print(f'k = {k:4d}: x_k0 = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
+                    print(f' -> converged to ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
             elif k > 100:
                 if k % 100 == 0:
-                    print(f'{k:4d}: x = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
-                    print(f' -> converged at ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
+                    print(f'k = {k:4d}: x_k0 = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
+                    print(f' -> converged to ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
             else:
-                print(f'{k:4d}: x = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
-                print(f' -> converged at ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
+                print(f'k = {k:4d}: x_k0 = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
+                print(f' -> converged to ({xs[k][0]:7.2f},{xs[k][1]:7.2f}) with f = {f:12.8f}')
 
             # vi. step 3.G  
             if fopt < par.tau:
                 break
         
-        # h. print last iteration 
-        print(f'{k:4d}: x = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
-        print(f' -> converged at ({xs[-1][0]:7.2f},{xs[-1][1]:7.2f}) with f = {f:12.8f}')
-
-        # i. print best solution
-        print(f'\nBest solution:\n x = ({xs[k, 0]:7.2f},{xs[k, 1]:7.2f}) -> f = {fopt:12.8f}')
-
-        # j. print best solution with 10 decimals
-        print(f'\nBest solution with 10 decimals:\n x = ({x_star[0]:7.10f},{x_star[1]:7.10f}) -> f = {griewank(x_star):12.8f}')
-
-        # k. calculate the elapsed time
+        # h. calculate the elapsed time
         elapsed_time = time.time() - start_time
+        
+        # i. print last iteration 
+        print(f'k = {k:4d}: x_k0 = ({x_k0[0]:7.2f},{x_k0[1]:7.2f})', end='')
+        print(f' -> converged to ({xs[-1][0]:7.2f},{xs[-1][1]:7.2f}) with f = {f:12.8f}')
+
+        # j. print best solution
+        print(f'\nk = {k} found the best solution.')
+        print(f'\nBest solution:\n x_star = ({xs[k, 0]:7.2f},{xs[k, 1]:7.2f}) -> f = {fopt:12.8f}')
+
+        # k. print best solution with 10 decimals
+        print(f'\nBest solution with 10 decimals:\n x_star = ({x_star[0]:7.10f},{x_star[1]:7.10f}) -> f = {griewank(x_star):12.8f}')
 
         # l. print the elapsed time
         print(f'\nElapsed time: {elapsed_time:7.2f} seconds')
