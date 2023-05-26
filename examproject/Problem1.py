@@ -140,103 +140,51 @@ class OptTax():
         # e. return optimal tau 
         return optimal_tau
 
+    def tau_loop(self):
+        V = 0
+        par = self.par
+        for t in np.linspace(0.1,0.9,81):
+            V_guess, _, L_guess, G = self.G_loop(t) 
+            if V < V_guess:
+                V = V_guess
+                tau_opt = t
+                L = L_guess
+                Gov = G
+        # iii. optimize L 
 
-    # def V_equation_tau(self, t):
-    #     """ solve for V """
+        print(f'trial value of G = {round(Gov,2)}')
+        print(f'G = {round(tau_opt*par.omega*L,2)}')
+        print(f' L = {round(L,2)}')
+        print(f' V = {round(V,2)}')
+        print(f' tau = {round(tau_opt,2)}')
 
-    #     # a. set par and sim 
-    #     par = self.par
+    def G_loop(self, t, out = 0):
+        par = self.par
+        G = 0.1
+        L = 0
+        while abs(G -(t*par.omega*L).round(5)) > 0.009:
+        
+            # ii. objective function (to minimize) 
+            def objective(x):
+                return -(self.V_equation(t, x, G=G, out=2))
+            # o. objective function 
+            obj = lambda x: objective(x)
+            result = optimize.minimize(obj, 12,  method = 'Nelder-Mead',bounds=[(0, 24)])
+            G = G + 0.01
+            L = result.x[0]
+            V = -result.fun
+            Gov = G - 0.01
+            # print(f' G = {G}')
+            # print(f'G = {(t*par.omega*result.x[0]).round(5)}')
+            # print(f' t = {t}')
+            # print(f' V = {-result.fun.round(2)}')
 
-    #     # b. set tau equal to input t
-    #     par.tau = t
-
-    #     # c. find L*
-    #     L = self.L_opt()
-
-    #     # d. find C (contraint)
-    #     C = par.kappa + (1 - par.tau) * par.omega * L
-
-    #     # e. find G
-    #     G = par.tau * par.omega * L
-
-    #     # f. find V utility and disutility
-    #     V_util = np.log((C**(par.alpha)) * (G**(1-par.alpha))) 
-    #     V_disutil = par.nu*(L**2)/2
-
-    #     # g. return V
-    #     return V_util - V_disutil
-
-
-
-
-
-# # Question 5 and 6
-
-#     def V_equation_gen(self, L, t, G):
-
-#         # a. set par 
-#         par = self.par
-
-#         # b. set tau to input t?? 
-#         par.tau = t
-
-#         # # c. find L*
-#         # L = self.L_opt()
-
-#         # d. find C (contraint)
-#         C = par.kappa + (1 - par.tau) * par.omega * L
-
-#         # e. find V utility and disutility
-#         V_util = ((((par.alpha * (C**((par.sigma - 1) / par.sigma))) + (1 - par.alpha) * (G**((par.sigma - 1) / par.sigma)))**(par.sigma / (par.sigma - 1)))**(1 - par.rho) - 1) / (1 - par.rho)
-#         V_disutil = par.nu * (L ** (1 + par.epsilon)) / (1 + par.epsilon)
-
-
-#         # f. return V
-#         return V_util - V_disutil
-
-
-    # def G_solve(self):
-
-    #     par = self.par
-
-    #     G_guess = 8
-
-    #     # Define objective function (to maximize)
-    #     def objective(x):
-    #         return -self.V_equation_gen(par.tau, x)
-
-    #     # Objective function
-    #     obj = lambda x: objective(x)
-
-    #     # Optimize tau
-    #     result = optimize.minimize(obj, G_guess, method='L-BFGS-B')
-
-    #     return result.x[0].round(4)
-    
-    # def tau_solve_G(self):
-
-    #     par = self.par
-
-    #     tau_guess = 0.5
-
-    #     G = self.G_solve()
-
-    #     # Define objective function (to maximize)
-    #     def objective(x):
-    #         return -self.V_equation_gen(x, G)
-
-    #     # Objective function
-    #     obj = lambda x: objective(x)
-
-    #     # Optimize tau
-    #     result = optimize.minimize(obj, tau_guess, method='Nelder-Mead', bounds=[(0, 1)])
-
-    #     return result.x[0].round(4)
-
+        if out == 0:
+            return V, t, L, Gov
+        else:
+            print(f'trial value of G = {round(Gov,2)}')
+            print(f'G = {round(t*par.omega*L,2)}')
+            print(f' L = {round(L,2)}')
+            print(f' V = {round(V,2)}')
+            print(f' tau = {round(t,2)}')
             
-
-
-
-
-
-
