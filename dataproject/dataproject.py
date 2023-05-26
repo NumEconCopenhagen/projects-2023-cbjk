@@ -2,6 +2,21 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from  matplotlib.colors import LinearSegmentedColormap
 
+def numb_parent(barsel_true):
+    """ 
+    Cut dataframe for number of parents
+    """
+
+    # a. cut data 
+    number = barsel_true[(barsel_true['Numb'] == 'Number of couples')
+                        & (barsel_true['Mom_educ'] == 'All mothers, regardless of education')
+                        & (barsel_true['Dad_educ'] == 'All fathers, regardless of education')]
+    
+    # b. return the dataframe 
+    return number
+
+
+
 def extract_data(barsel_true):
     
     """

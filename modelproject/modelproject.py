@@ -21,7 +21,7 @@ class OLGclass():
         self.varname()
     
     def setup(self):
-        """ baseline parameters """
+        """ Baseline parameters """
 
         # a. set par
         par = self.par
@@ -63,7 +63,7 @@ class OLGclass():
         par.d = 0.0
 
     def varname(self):
-        """ allocate arrays for simulation """
+        """ Allocate arrays for simulation """
         
         # a. set par and sim 
         par = self.par
@@ -78,7 +78,7 @@ class OLGclass():
             sim.__dict__[varname] = init_value
 
     def sim_model(self):
-        """ simulate the OLG model """
+        """ Simulate the OLG model """
 
         # a. set par and sim 
         par = self.par
@@ -244,7 +244,7 @@ def sim_a(par,sim,t,s):
     sim.K[t] = (1-par.delta)*sim.K_lag[t] + I
 
 def plot_K(K_lag = None, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_tau = None):
-    """ Plot the capital """
+    """ Plot capital """
 
     # a. setup for figure
     fig = plt.figure()
@@ -279,9 +279,9 @@ def plot_K(K_lag = None, K_ss = None, K_lag_int = None, K_lag_old = None, K_lag_
     plt.show()
 
 def plot_C(C1, C1_2, C2 = None, C2_2 = None, C2_1 = None,  C2_1_2 = None, title = None):
-    """ Plot the consumption """
+    """ Plot consumption """
     # a. setup for figure
-    fig = plt.figure(figsize = (2*6,8/1.5))
+    fig = plt.figure(figsize = (10,5))
     
     # b. plot C_1 
     ax = fig.add_subplot(1,2,1)
@@ -327,7 +327,7 @@ def plot_C(C1, C1_2, C2 = None, C2_2 = None, C2_1 = None,  C2_1_2 = None, title 
 
 
 def plot_pi(pi_n_At = None, pi_n = None, pi_int = None):
-    """ Plot the firms profit """
+    """ Plot firms profit """
 
     # a. setup for figure
     fig = plt.figure()
@@ -356,23 +356,11 @@ def plot_pi(pi_n_At = None, pi_n = None, pi_int = None):
     fig.tight_layout()
     plt.show()
 
-def utility_table(lst):
-    utilities = []
-    for model in lst:
-        utility = model.sim.u
-        utilities.append(utility)
-    
-    df = pd.DataFrame(utilities, columns=['Utility'])
-    df['Model'] = range(len(lst))
-    df = df[['Model', 'Utility']]
-    df = df.set_index('Model', drop=True)
-
-    return df
-
 def plot_T_B(T_int, T_tau_w, T_tau_r, B_int, B_tau_w, B_tau_r):
+    """ Plot tax revenue and debt """
 
     # a. setup for figure
-    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize = (2*6,8/1.5))
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize = (10,5))
 
     # b. plot tax revenue 
     # i. plot 
