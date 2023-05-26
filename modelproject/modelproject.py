@@ -360,7 +360,7 @@ def plot_T_B(T_int, T_tau_w, T_tau_r, B_int, B_tau_w, B_tau_r):
     """ Plot tax revenue and debt """
 
     # a. setup for figure
-    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize = (10,5))
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize = (8,4))
 
     # b. plot tax revenue 
     # i. plot 
